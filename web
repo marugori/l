@@ -1,0 +1,54 @@
+from flask import Flask, request, render_template_string
+import openai
+
+app = Flask(__name__)
+
+# OpenAI APIキーを設定
+openai.api_key = 'YOUR_OPENAI_API_KEY'
+
+@app.route('/')
+def index():
+    return render_template_string('''
+        <!doctype html>
+        <html>
+        <head><title>Chat with ChatGPT</title></head>
+        <body>
+            <h1>Chat with ChatGPT</h1>
+            <form action="/chat" method="post">
+                Your Message: <input type="text" name="message"><br>
+                <input type="submit" value="Send">
+            </form>
+        </body>
+        </html>
+    ''')
+
+@app.route('/chat', methods=['POST'])
+def chat():
+    user_message = request.form['message']
+    
+    # OpenAI APIを使用してChatGPTにユーザーのメッセージを送信
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": user_message},
+        ]
+    )
+    
+    chatgpt_response = response.choices[0].message['content'].strip()
+
+    return render_template_string('''
+        <!doctype html>
+        <html>
+        <head><title>Chat with ChatGPT</title></head>
+        <body>
+            <h1>Chat with ChatGPT</h1>
+            <p><strong>Your Message:</strong> {{ user_message }}</p>
+            <p><strong>ChatGPT's Response:</strong> {{ chatgpt_response }}</p>
+            <a href="/">Back to Home</a>
+        </body>
+        </html>
+    ''', user_message=user_message, chatgpt_response=chatgpt_response)
+
+if __name__ == '__main__':
+    app.run(debug=True)
